@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Roll - GameHub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Dice Roll</h1>
+            <p>Predict the dice roll and win credits!</p>
+        </header>
+
+        <a href="index.html" class="back-btn">Back to Dashboard</a>
+
+        <div class="game-container">
+            <div class="credits">Credits: <span id="creditsDisplay">0</span></div>
+            
+            <div class="game-area">
+                <h2>Place Your Bet</h2>
+                <p>Choose your prediction and bet amount</p>
+                
+                <div>
+                    <h3>Select Prediction:</h3>
+                    <button class="game-btn" onclick="selectPrediction('even')">Even (2x)</button>
+                    <button class="game-btn" onclick="selectPrediction('odd')">Odd (2x)</button>
+                    <button class="game-btn" onclick="selectPrediction('exact')">Exact Number (6x)</button>
+                </div>
+                
+                <div id="exactNumberOptions" style="display: none; margin-top: 20px;">
+                    <h3>Select Number:</h3>
+                    <div>
+                        <button class="game-btn" onclick="selectExactNumber(1)">1</button>
+                        <button class="game-btn" onclick="selectExactNumber(2)">2</button>
+                        <button class="game-btn" onclick="selectExactNumber(3)">3</button>
+                        <button class="game-btn" onclick="selectExactNumber(4)">4</button>
+                        <button class="game-btn" onclick="selectExactNumber(5)">5</button>
+                        <button class="game-btn" onclick="selectExactNumber(6)">6</button>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <h3>Bet Amount: <span id="betAmount">10</span> credits</h3>
+                    <input type="range" id="betSlider" min="10" max="100" step="10" value="10" oninput="updateBetAmount()">
+                </div>
+                
+                <button class="game-btn" onclick="rollDice()" style="margin-top: 30px;">Roll Dice</button>
+            </div>
+            
+            <div id="resultArea" style="display: none;">
+                <h2>Result: <span id="diceResult"></span></h2>
+                <p id="resultMessage"></p>
+                <p>New Balance: <span id="newBalance"></span> credits</p>
+                <button class="game-btn" onclick="resetGame()">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPrediction = null;
+        let exactNumber = null;
+        let betAmount = 10;
+        
+        // Update credits display
+        function updateCreditsDisplay() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (user) {
+                document.getElementById('creditsDisplay').textContent = user.credits;
+            }
+        }
+        
+        // Select prediction type
+        function selectPrediction(type) {
+            currentPrediction = type;
+            
+            if (type === 'exact') {
+                document.getElementById('exactNumberOptions').style.display = 'block';
+            } else {
+                document.getElementById('exactNumberOptions').style.display = 'none';
+                exactNumber = null;
+            }
+            
+            // Highlight selected button
+            document.querySelectorAll('.game-btn').forEach(btn => {
+                btn.style.background = '#fdbb2d';
+            });
+            event.target.style.background = '#ffa500';
+        }
+        
+        // Select exact number
+        function selectExactNumber(number) {
+            exactNumber = number;
+            
+            // Highlight selected button
+            document.querySelectorAll('#exactNumberOptions .game-btn').forEach(btn => {
+                btn.style.background = '#fdbb2d';
+            });
+            event.target.style.background = '#ffa500';
+        }
+        
+        // Update bet amount
+        function updateBetAmount() {
+            betAmount = parseInt(document.getElementById('betSlider').value);
+            document.getElementById('betAmount').textContent = betAmount;
+        }
+        
+        // Roll the dice
+        function rollDice() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            
+            if (!user) {
+                alert('Please log in to play');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            if (!currentPrediction) {
+                alert('Please select a prediction type');
+                return;
+            }
+            
+            if (currentPrediction === 'exact' && !exactNumber) {
+                alert('Please select a number');
+                return;
+            }
+            
+            if (user.credits < betAmount) {
+                alert('Not enough credits');
+                return;
+            }
+            
+            // Deduct bet amount
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const userIndex = users.findIndex(u => u.username === user.username);
+            
+            users[userIndex].credits -= betAmount;
+            user.credits -= betAmount;
+            
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            updateCreditsDisplay();
+            
+            // Roll the dice (1-6)
+            const diceRoll = Math.floor(Math.random() * 6) + 1;
+            document.getElementById('diceResult').textContent = diceRoll;
+            
+            let winAmount = 0;
+            let message = '';
+            
+            // Check if player won
+            if (currentPrediction === 'even' && diceRoll % 2 === 0) {
+                winAmount = betAmount * 2;
+                message = 'You won! Even number rolled.';
+            } else if (currentPrediction === 'odd' && diceRoll % 2 === 1) {
+                winAmount = betAmount * 2;
+                message = 'You won! Odd number rolled.';
+            } else if (currentPrediction === 'exact' && diceRoll === exactNumber) {
+                winAmount = betAmount * 6;
+                message = `You won! Exact number ${exactNumber} rolled.`;
+            } else {
+                message = 'You lost. Try again!';
+            }
+            
+            // Add winnings if any
+            if (winAmount > 0) {
+                users[userIndex].credits += winAmount;
+                user.credits += winAmount;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+            
+            // Show result
+            document.getElementById('resultMessage').textContent = message;
+            document.getElementById('newBalance').textContent = user.credits;
+            document.getElementById('resultArea').style.display = 'block';
+            document.querySelector('.game-area').style.display = 'none';
+        }
+        
+        // Reset game
+        function resetGame() {
+            currentPrediction = null;
+            exactNumber = null;
+            document.getElementById('resultArea').style.display = 'none';
+            document.querySelector('.game-area').style.display = 'block';
+            updateCreditsDisplay();
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            updateCreditsDisplay();
+        });
+    </script>
+</body>
+</html>

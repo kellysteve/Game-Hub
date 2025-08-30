@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameHub - Play Games, Earn Credits</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>GameHub</h1>
+            <p>Play Games & Earn Credits</p>
+        </header>
+
+        <div class="auth-container" id="authContainer">
+            <div class="auth-form" id="loginForm">
+                <h2>Login</h2>
+                <input type="text" id="loginUsername" placeholder="Username" required>
+                <input type="password" id="loginPassword" placeholder="Password" required>
+                <button onclick="login()">Login</button>
+                <p>Don't have an account? <a href="#" onclick="showSignup()">Sign up</a></p>
+            </div>
+
+            <div class="auth-form" id="signupForm" style="display: none;">
+                <h2>Create Account</h2>
+                <input type="text" id="signupUsername" placeholder="Choose a username" required>
+                <input type="password" id="signupPassword" placeholder="Choose a password" required>
+                <button onclick="signup()">Sign Up</button>
+                <p>Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+            </div>
+        </div>
+
+        <div class="dashboard" id="dashboard" style="display: none;">
+            <h2>Welcome, <span id="usernameDisplay"></span>!</h2>
+            <div class="credits">Credits: <span id="creditsDisplay">0</span></div>
+            
+            <div class="games-grid">
+                <div class="game-card">
+                    <h3>Dice Roll</h3>
+                    <p>Predict the dice roll and win credits!</p>
+                    <a href="dice-roll.html" class="play-btn">Play Now</a>
+                </div>
+                
+                <div class="game-card">
+                    <h3>Number Guess</h3>
+                    <p>Guess the correct number to win big!</p>
+                    <a href="number-guess.html" class="play-btn">Play Now</a>
+                </div>
+                
+                <div class="game-card">
+                    <h3>Slot Machine</h3>
+                    <p>Spin the reels and match symbols to win!</p>
+                    <a href="slot-machine.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+            
+            <div class="dashboard-actions">
+                <a href="leaderboard.html" class="leaderboard-btn">View Leaderboard</a>
+                <button onclick="logout()" class="logout-btn">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+</body>
+</html>

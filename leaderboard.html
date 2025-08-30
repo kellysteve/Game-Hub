@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - GameHub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Leaderboard</h1>
+            <p>See who has the most credits!</p>
+        </header>
+
+        <a href="index.html" class="back-btn">Back to Dashboard</a>
+
+        <div class="game-container">
+            <h2>Top Players</h2>
+            
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Username</th>
+                        <th>Credits</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardBody">
+                    <!-- Leaderboard will be populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Load and display leaderboard
+        function loadLeaderboard() {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            
+            // Sort users by credits (descending)
+            users.sort((a, b) => b.credits - a.credits);
+            
+            const leaderboardBody = document.getElementById('leaderboardBody');
+            leaderboardBody.innerHTML = '';
+            
+            // Display top 10 players
+            const topPlayers = users.slice(0, 10);
+            
+            topPlayers.forEach((user, index) => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${user.username}</td>
+                    <td>${user.credits}</td>
+                `;
+                
+                leaderboardBody.appendChild(row);
+            });
+            
+            // If no users exist
+            if (users.length === 0) {
+                leaderboardBody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align: center;">No players yet</td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLeaderboard();
+        });
+    </script>
+</body>
+</html>

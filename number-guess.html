@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Guess - GameHub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Number Guess</h1>
+            <p>Guess the correct number to win big!</p>
+        </header>
+
+        <a href="index.html" class="back-btn">Back to Dashboard</a>
+
+        <div class="game-container">
+            <div class="credits">Credits: <span id="creditsDisplay">0</span></div>
+            
+            <div class="game-area">
+                <h2>Guess the Number (1-10)</h2>
+                <p>Select your guess and bet amount</p>
+                
+                <div>
+                    <h3>Select Number:</h3>
+                    <div>
+                        <button class="game-btn" onclick="selectNumber(1)">1</button>
+                        <button class="game-btn" onclick="selectNumber(2)">2</button>
+                        <button class="game-btn" onclick="selectNumber(3)">3</button>
+                        <button class="game-btn" onclick="selectNumber(4)">4</button>
+                        <button class="game-btn" onclick="selectNumber(5)">5</button>
+                    </div>
+                    <div>
+                        <button class="game-btn" onclick="selectNumber(6)">6</button>
+                        <button class="game-btn" onclick="selectNumber(7)">7</button>
+                        <button class="game-btn" onclick="selectNumber(8)">8</button>
+                        <button class="game-btn" onclick="selectNumber(9)">9</button>
+                        <button class="game-btn" onclick="selectNumber(10)">10</button>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <h3>Bet Amount: <span id="betAmount">10</span> credits</h3>
+                    <input type="range" id="betSlider" min="10" max="100" step="10" value="10" oninput="updateBetAmount()">
+                </div>
+                
+                <button class="game-btn" onclick="guessNumber()" style="margin-top: 30px;">Make Guess</button>
+            </div>
+            
+            <div id="resultArea" style="display: none;">
+                <h2>The number was: <span id="correctNumber"></span></h2>
+                <p id="resultMessage"></p>
+                <p>New Balance: <span id="newBalance"></span> credits</p>
+                <button class="game-btn" onclick="resetGame()">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedNumber = null;
+        let betAmount = 10;
+        
+        // Update credits display
+        function updateCreditsDisplay() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (user) {
+                document.getElementById('creditsDisplay').textContent = user.credits;
+            }
+        }
+        
+        // Select number
+        function selectNumber(number) {
+            selectedNumber = number;
+            
+            // Highlight selected button
+            document.querySelectorAll('.game-btn').forEach(btn => {
+                btn.style.background = '#fdbb2d';
+            });
+            event.target.style.background = '#ffa500';
+        }
+        
+        // Update bet amount
+        function updateBetAmount() {
+            betAmount = parseInt(document.getElementById('betSlider').value);
+            document.getElementById('betAmount').textContent = betAmount;
+        }
+        
+        // Make a guess
+        function guessNumber() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            
+            if (!user) {
+                alert('Please log in to play');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            if (!selectedNumber) {
+                alert('Please select a number');
+                return;
+            }
+            
+            if (user.credits < betAmount) {
+                alert('Not enough credits');
+                return;
+            }
+            
+            // Deduct bet amount
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const userIndex = users.findIndex(u => u.username === user.username);
+            
+            users[userIndex].credits -= betAmount;
+            user.credits -= betAmount;
+            
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            updateCreditsDisplay();
+            
+            // Generate random number (1-10)
+            const correctNumber = Math.floor(Math.random() * 10) + 1;
+            document.getElementById('correctNumber').textContent = correctNumber;
+            
+            let winAmount = 0;
+            let message = '';
+            
+            // Check if player won
+            if (selectedNumber === correctNumber) {
+                winAmount = betAmount * 5; // 5x multiplier for correct guess
+                message = 'You won! Correct guess.';
+            } else {
+                message = 'You lost. Try again!';
+            }
+            
+            // Add winnings if any
+            if (winAmount > 0) {
+                users[userIndex].credits += winAmount;
+                user.credits += winAmount;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+            
+            // Show result
+            document.getElementById('resultMessage').textContent = message;
+            document.getElementById('newBalance').textContent = user.credits;
+            document.getElementById('resultArea').style.display = 'block';
+            document.querySelector('.game-area').style.display = 'none';
+        }
+        
+        // Reset game
+        function resetGame() {
+            selectedNumber = null;
+            document.getElementById('resultArea').style.display = 'none';
+            document.querySelector('.game-area').style.display = 'block';
+            updateCreditsDisplay();
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            updateCreditsDisplay();
+        });
+    </script>
+</body>
+</html>

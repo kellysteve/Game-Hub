@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slot Machine - GameHub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Slot Machine</h1>
+            <p>Spin the reels and match symbols to win!</p>
+        </header>
+
+        <a href="index.html" class="back-btn">Back to Dashboard</a>
+
+        <div class="game-container">
+            <div class="credits">Credits: <span id="creditsDisplay">0</span></div>
+            
+            <div class="game-area">
+                <h2>Slot Machine</h2>
+                
+                <div class="slot-machine">
+                    <div class="slot-reel" id="reel1">🍒</div>
+                    <div class="slot-reel" id="reel2">🍋</div>
+                    <div class="slot-reel" id="reel3">🍊</div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <h3>Bet Amount: <span id="betAmount">10</span> credits</h3>
+                    <input type="range" id="betSlider" min="10" max="100" step="10" value="10" oninput="updateBetAmount()">
+                </div>
+                
+                <button class="game-btn" onclick="spin()" style="margin-top: 30px;">Spin</button>
+            </div>
+            
+            <div id="resultArea" style="display: none;">
+                <h2>Result</h2>
+                <div class="slot-machine">
+                    <div class="slot-reel" id="resultReel1"></div>
+                    <div class="slot-reel" id="resultReel2"></div>
+                    <div class="slot-reel" id="resultReel3"></div>
+                </div>
+                <p id="resultMessage"></p>
+                <p>New Balance: <span id="newBalance"></span> credits</p>
+                <button class="game-btn" onclick="resetGame()">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const symbols = ['🍒', '🍋', '🍊', '🍇', '🍉', '💎'];
+        let betAmount = 10;
+        
+        // Update credits display
+        function updateCreditsDisplay() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (user) {
+                document.getElementById('creditsDisplay').textContent = user.credits;
+            }
+        }
+        
+        // Update bet amount
+        function updateBetAmount() {
+            betAmount = parseInt(document.getElementById('betSlider').value);
+            document.getElementById('betAmount').textContent = betAmount;
+        }
+        
+        // Spin the slot machine
+        function spin() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            
+            if (!user) {
+                alert('Please log in to play');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            if (user.credits < betAmount) {
+                alert('Not enough credits');
+                return;
+            }
+            
+            // Deduct bet amount
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const userIndex = users.findIndex(u => u.username === user.username);
+            
+            users[userIndex].credits -= betAmount;
+            user.credits -= betAmount;
+            
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            updateCreditsDisplay();
+            
+            // Generate random symbols
+            const result = [
+                symbols[Math.floor(Math.random() * symbols.length)],
+                symbols[Math.floor(Math.random() * symbols.length)],
+                symbols[Math.floor(Math.random() * symbols.length)]
+            ];
+            
+            // Display result
+            document.getElementById('resultReel1').textContent = result[0];
+            document.getElementById('resultReel2').textContent = result[1];
+            document.getElementById('resultReel3').textContent = result[2];
+            
+            let winAmount = 0;
+            let message = '';
+            
+            // Check if player won (all three symbols match)
+            if (result[0] === result[1] && result[1] === result[2]) {
+                if (result[0] === '💎') {
+                    winAmount = betAmount * 10; // 10x for diamonds
+                    message = 'Jackpot! Three diamonds!';
+                } else {
+                    winAmount = betAmount * 5; // 5x for other matches
+                    message = 'Big win! Three matching symbols!';
+                }
+            } 
+            // Check for two matching symbols
+            else if (result[0] === result[1] || result[1] === result[2] || result[0] === result[2]) {
+                winAmount = betAmount * 2; // 2x for two matches
+                message = 'You won! Two matching symbols.';
+            } else {
+                message = 'You lost. Try again!';
+            }
+            
+            // Add winnings if any
+            if (winAmount > 0) {
+                users[userIndex].credits += winAmount;
+                user.credits += winAmount;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+            
+            // Show result
+            document.getElementById('resultMessage').textContent = message;
+            document.getElementById('newBalance').textContent = user.credits;
+            document.getElementById('resultArea').style.display = 'block';
+            document.querySelector('.game-area').style.display = 'none';
+        }
+        
+        // Reset game
+        function resetGame() {
+            document.getElementById('resultArea').style.display = 'none';
+            document.querySelector('.game-area').style.display = 'block';
+            updateCreditsDisplay();
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            updateCreditsDisplay();
+        });
+    </script>
+</body>
+</html>
